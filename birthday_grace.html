@@ -318,45 +318,114 @@
 
   /* ─── TESTIMONIALS SECTION (VERSION TOURNIQUET) ─── */
   .testimonials-section {
-    padding: 6rem 0; /* On enlève le padding latéral pour le carrousel */
-    overflow: hidden;
+    padding: 6rem 0 5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-
-  /* Conteneur du carrousel */
-  .testimonials-carousel {
-    display: flex;
-    gap: 3rem;
-    padding: 120px 2rem 100px 2rem; /* Espace pour l'ouverture des enveloppes */
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    width: 100%;
-    scrollbar-width: none; /* Cache la scrollbar sur Firefox */
-    -ms-overflow-style: none; /* Cache la scrollbar sur IE/Edge */
-  }
-
-  .testimonials-carousel::-webkit-scrollbar {
-    display: none; /* Cache la scrollbar sur Chrome/Safari */
-  }
-
-  /* Enveloppe plus grande */
-  .envelope-wrapper {
-    flex: 0 0 350px; /* Largeur fixe pour l'effet carrousel */
-    height: 240px;
     position: relative;
+  }
+
+  .testimonials-stage-container {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2.5rem;
+    padding: 0 4rem;
+  }
+
+  .carousel-nav {
+    flex: 0 0 auto;
+    background: white;
+    border: 1px solid rgba(201,137,122,0.35);
+    color: var(--dusty-rose);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transition: all 0.25s;
+    font-size: 1.1rem;
+    z-index: 30;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .carousel-nav:hover {
+    background: var(--blush);
+    border-color: var(--dusty-rose);
+    transform: scale(1.08);
+  }
+
+  /* Stage: viewport for the 3-cards tourniquet */
+  .testimonials-stage {
+    position: relative;
+    width: 420px;
+    height: 280px;
+    flex: 0 0 420px;
+    overflow: visible;
+    margin: 300px 2rem 30px;
+  }
+
+  .envelope-wrapper {
+    position: absolute;
+    width: 420px;
+    height: 280px;
+    top: 0;
+    left: 0;
     perspective: 1500px;
-    scroll-snap-align: center;
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.5s ease,
+                filter 0.4s ease;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .envelope-wrapper[data-pos="active"] {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+    z-index: 5;
+    cursor: pointer;
+    pointer-events: auto;
+    filter: saturate(1);
+  }
+
+  .envelope-wrapper[data-pos="prev"] {
+    transform: translateX(-340px) scale(0.7);
+    opacity: 0.55;
+    z-index: 2;
+    filter: saturate(0.7);
+  }
+
+  .envelope-wrapper[data-pos="next"] {
+    transform: translateX(340px) scale(0.7);
+    opacity: 0.55;
+    z-index: 2;
+    filter: saturate(0.7);
+  }
+
+  .envelope-wrapper[data-pos="hidden-left"] {
+    transform: translateX(-700px) scale(0.5);
+    opacity: 0;
+    z-index: 1;
+  }
+
+  .envelope-wrapper[data-pos="hidden-right"] {
+    transform: translateX(700px) scale(0.5);
+    opacity: 0;
+    z-index: 1;
   }
 
   .envelope-back {
     position: absolute;
     inset: 0;
     background: var(--dusty-rose);
-    border-radius: 8px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.14);
   }
 
   .envelope-flap {
@@ -364,123 +433,151 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 60%;
+    height: 56%;
     background: #d4988a;
     clip-path: polygon(0 0, 100% 0, 50% 100%);
-    transform-origin: top;
-    transition: transform 0.6s ease-in-out;
+    transform-origin: top center;
+    transition: transform 0.7s ease-in-out;
     z-index: 4;
-    border-radius: 8px 8px 0 0;
+    border-radius: 10px 10px 0 0;
   }
 
   .envelope-front {
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     z-index: 3;
     pointer-events: none;
-    border-radius: 8px;
+    border-radius: 10px;
   }
+
   .envelope-front::before {
     content: '';
     position: absolute;
     inset: 0;
     background: #c07d6c;
     clip-path: polygon(0 0, 50% 50%, 0 100%);
+    border-radius: 10px 0 0 10px;
   }
+
   .envelope-front::after {
     content: '';
     position: absolute;
     inset: 0;
     background: #ba7665;
     clip-path: polygon(100% 0, 100% 100%, 50% 50%);
+    border-radius: 0 10px 10px 0;
   }
+
   .envelope-front-bottom {
     position: absolute;
     inset: 0;
     background: var(--dusty-rose);
     clip-path: polygon(0 100%, 50% 50%, 100% 100%);
     z-index: 4;
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 10px 10px;
   }
 
-  /* Carte de message plus grande */
   .message-card {
     position: absolute;
-    bottom: 10px;
+    bottom: 12px;
     left: 5%;
     width: 90%;
-    height: 220px; /* Taille initiale */
+    height: 240px;
     background: white;
-    border-radius: 4px;
-    padding: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    box-shadow: 0 0 24px rgba(0,0,0,0.12);
     z-index: 2;
-    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), height 0.7s;
+    overflow: hidden;
+    transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.75s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
   }
 
-  /* Photo grande et rectangulaire */
+  /* Large rectangular photo — as important as the text */
   .message-photo {
     width: 100%;
-    height: 150px;
+    height: 190px;
     object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    transition: height 0.7s;
+    flex-shrink: 0;
+    transition: height 0.75s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .message-content {
     text-align: center;
-    padding: 0 10px 10px 10px;
+    padding: 1rem 1.4rem 1.2rem;
     opacity: 0;
-    transition: opacity 0.4s;
+    transition: opacity 0.4s 0.35s;
+    flex-shrink: 0;
   }
 
   .message-text {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     font-style: italic;
     color: var(--deep);
-    line-height: 1.4;
-    margin-bottom: 0.5rem;
+    line-height: 1.55;
+    margin-bottom: 0.6rem;
   }
 
   .message-author {
     font-family: 'Jost', sans-serif;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--mid);
+    letter-spacing: 0.15em;
+    color: var(--dusty-rose);
   }
 
-  /* États Ouverts */
+  /* ── Open state ── */
   .envelope-wrapper.open .envelope-flap {
-    transform: rotateX(180deg);
+    transform: rotateX(-180deg);
     z-index: 1;
   }
 
   .envelope-wrapper.open .message-card {
-    transform: translateY(-180px); /* Elle sort beaucoup plus */
-    height: 380px; /* S'agrandit pour tout montrer */
-    z-index: 5;
+    transform: translateY(-310px);
+    height: 570px;
+    z-index: 6;
+  }
+
+  .envelope-wrapper.open .message-photo {
+    height: 340px;
   }
 
   .envelope-wrapper.open .message-content {
     opacity: 1;
-    transition: opacity 0.5s 0.4s;
+  }
+
+  /* Dots navigation */
+  .carousel-dots {
+    display: flex;
+    gap: 0.55rem;
+    margin-top: 2rem;
+  }
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--blush);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 0;
+  }
+
+  .carousel-dot.active {
+    background: var(--dusty-rose);
+    transform: scale(1.5);
   }
 
   .hint-scroll {
-    margin-top: 1rem;
-    font-size: 0.8rem;
+    margin-top: 1.5rem;
+    font-size: 0.68rem;
     color: var(--mid);
-    opacity: 0.6;
-    letter-spacing: 0.1em;
+    opacity: 0.5;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
   }
 
 </style>
@@ -559,50 +656,58 @@
   <div class="section-label fade-in">
     <span>Ils ont quelque chose à te dire</span>
   </div>
-  
-  <div class="testimonials-carousel">
-    
-    <div class="envelope-wrapper fade-in" onclick="this.classList.toggle('open')">
-      <div class="envelope-back"></div>
-      <div class="message-card">
-        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80" alt="Souvenir" class="message-photo">
-        <div class="message-content">
-          <p class="message-text">"Une petite pensée pour une femme exceptionnelle. Profite bien de ta journée !"</p>
-          <span class="message-author">Camille</span>
+
+  <div class="testimonials-stage-container">
+    <button class="carousel-nav" id="tPrev" aria-label="Précédent">&#8592;</button>
+
+    <div class="testimonials-stage" id="testimonialsStage">
+
+      <div class="envelope-wrapper fade-in" data-index="0">
+        <div class="envelope-back"></div>
+        <div class="message-card">
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80" alt="Camille" class="message-photo">
+          <div class="message-content">
+            <p class="message-text">"Une petite pensée pour une femme exceptionnelle. Profite bien de ta journée !"</p>
+            <span class="message-author">Camille</span>
+          </div>
         </div>
+        <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
+        <div class="envelope-flap"></div>
       </div>
-      <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
-      <div class="envelope-flap"></div>
+
+      <div class="envelope-wrapper fade-in" data-index="1">
+        <div class="envelope-back"></div>
+        <div class="message-card">
+          <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80" alt="La Team" class="message-photo">
+          <div class="message-content">
+            <p class="message-text">"Joyeux anniversaire Grace ! Hâte de se retrouver pour fêter ça comme il se doit."</p>
+            <span class="message-author">La Team</span>
+          </div>
+        </div>
+        <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
+        <div class="envelope-flap"></div>
+      </div>
+
+      <div class="envelope-wrapper fade-in" data-index="2">
+        <div class="envelope-back"></div>
+        <div class="message-card">
+          <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80" alt="Léa" class="message-photo">
+          <div class="message-content">
+            <p class="message-text">"Plein de bonheur pour cette nouvelle année. Ne change jamais ta belle énergie."</p>
+            <span class="message-author">Léa</span>
+          </div>
+        </div>
+        <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
+        <div class="envelope-flap"></div>
+      </div>
+
     </div>
 
-    <div class="envelope-wrapper fade-in" onclick="this.classList.toggle('open')">
-      <div class="envelope-back"></div>
-      <div class="message-card">
-        <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=400&q=80" alt="Souvenir" class="message-photo">
-        <div class="message-content">
-          <p class="message-text">"Joyeux anniversaire Grace ! Hâte de se retrouver pour fêter ça comme il se doit."</p>
-          <span class="message-author">La Team</span>
-        </div>
-      </div>
-      <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
-      <div class="envelope-flap"></div>
-    </div>
-
-    <div class="envelope-wrapper fade-in" onclick="this.classList.toggle('open')">
-      <div class="envelope-back"></div>
-      <div class="message-card">
-        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80" alt="Souvenir" class="message-photo">
-        <div class="message-content">
-          <p class="message-text">"Plein de bonheur pour cette nouvelle année. Ne change jamais ta belle énergie."</p>
-          <span class="message-author">Léa</span>
-        </div>
-      </div>
-      <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
-      <div class="envelope-flap"></div>
-    </div>
-
+    <button class="carousel-nav" id="tNext" aria-label="Suivant">&#8594;</button>
   </div>
-  <div class="hint-scroll">Fais défiler · Clique pour ouvrir</div>
+
+  <div class="carousel-dots" id="carouselDots"></div>
+  <p class="hint-scroll">Clique sur l'enveloppe pour l'ouvrir</p>
 </section>
 
 <footer>
@@ -634,6 +739,75 @@
   }, { threshold: 0.15 });
 
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+  // ── Testimonials Carousel (tourniquet) ──
+  (function() {
+    var stage = document.getElementById('testimonialsStage');
+    var dotsContainer = document.getElementById('carouselDots');
+    var wrappers = Array.from(stage.querySelectorAll('.envelope-wrapper'));
+    var current = 0;
+    var autoTimer = null;
+
+    wrappers.forEach(function(_, i) {
+      var dot = document.createElement('button');
+      dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', 'Témoignage ' + (i + 1));
+      dot.addEventListener('click', function() { goTo(i); });
+      dotsContainer.appendChild(dot);
+    });
+
+    function getPos(index) {
+      var n = wrappers.length;
+      var diff = ((index - current) % n + n) % n;
+      if (diff === 0) return 'active';
+      if (diff === 1) return 'next';
+      if (diff === n - 1) return 'prev';
+      if (diff < n / 2) return 'hidden-right';
+      return 'hidden-left';
+    }
+
+    function update() {
+      wrappers.forEach(function(w, i) {
+        w.dataset.pos = getPos(i);
+        if (w.dataset.pos !== 'active') w.classList.remove('open');
+      });
+      var dots = dotsContainer.querySelectorAll('.carousel-dot');
+      dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
+    }
+
+    function goTo(index) {
+      var n = wrappers.length;
+      current = ((index % n) + n) % n;
+      update();
+      resetAuto();
+    }
+
+    function resetAuto() {
+      clearInterval(autoTimer);
+      autoTimer = setInterval(function() {
+        var anyOpen = wrappers.some(function(w) { return w.classList.contains('open'); });
+        if (!anyOpen) goTo(current + 1);
+      }, 5000);
+    }
+
+    document.getElementById('tPrev').addEventListener('click', function() { goTo(current - 1); });
+    document.getElementById('tNext').addEventListener('click', function() { goTo(current + 1); });
+
+    wrappers.forEach(function(w) {
+      w.addEventListener('click', function() {
+        if (w.dataset.pos !== 'active') return;
+        w.classList.toggle('open');
+        if (w.classList.contains('open')) {
+          clearInterval(autoTimer);
+        } else {
+          resetAuto();
+        }
+      });
+    });
+
+    update();
+    resetAuto();
+  })();
 </script>
 </body>
 </html>
