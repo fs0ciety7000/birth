@@ -85,7 +85,7 @@
   .hero-title {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(3.2rem, 10vw, 6.5rem);
-    font-weight: 300;
+    font-weight: 400;
     line-height: 1.05;
     text-align: center;
     color: var(--deep);
@@ -110,7 +110,7 @@
   .hero-sub {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
     color: var(--mid);
     text-align: center;
     max-width: 420px;
@@ -199,7 +199,7 @@
 
   .photo-frame img {
     display: block;
-    width: min(380px, 88vw);
+    width: min(480px, 88vw);
     border-radius: 2px;
     position: relative;
     z-index: 1;
@@ -224,7 +224,7 @@
   }
 
   .section-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     letter-spacing: 0.4em;
     text-transform: uppercase;
     color: var(--dusty-rose);
@@ -257,9 +257,9 @@
 
   .letter-body {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
     font-weight: 300;
-    line-height: 1.95;
+    line-height: 1.8;
     color: var(--deep);
   }
 
@@ -283,9 +283,9 @@
   .letter-signature {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: 1.6rem;
+    font-size: 2.4rem;
     color: var(--dusty-rose);
-    margin-top: 0.5rem;
+    margin-top: 1rem;
   }
 
   /* ─── FOOTER ─── */
@@ -420,7 +420,24 @@
     z-index: 1;
   }
 
-  .envelope-back {
+  /* ── Wax seal ── */
+  .envelope-seal {
+    position: absolute;
+    left: 50%;
+    top: 49%;
+    transform: translateX(-50%) translateY(-50%);
+    z-index: 6;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3));
+  }
+
+  .envelope-wrapper.open .envelope-seal {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-50%) scale(0.5);
+  }
+
+    .envelope-back {
     position: absolute;
     inset: 0;
     background: var(--dusty-rose);
@@ -571,7 +588,56 @@
     transform: scale(1.5);
   }
 
-  .hint-scroll {
+  @media (max-width: 560px) {
+    .testimonials-stage-container {
+      padding: 0;
+    }
+    .carousel-nav {
+      width: 40px;
+      height: 40px;
+      font-size: 0.9rem;
+    }
+    .testimonials-stage {
+      flex: 0 0 275px;
+      width: 275px;
+      height: 184px;
+      margin-top: 205px;
+      margin-bottom: 15px;
+      margin-left: 0;
+      margin-right: 0;
+    }
+    .envelope-wrapper {
+      width: 275px;
+      height: 184px;
+    }
+    .envelope-wrapper[data-pos="prev"] {
+      transform: translateX(-226px) scale(0.7);
+    }
+    .envelope-wrapper[data-pos="next"] {
+      transform: translateX(226px) scale(0.7);
+    }
+    .envelope-wrapper[data-pos="hidden-left"] {
+      transform: translateX(-460px) scale(0.5);
+    }
+    .envelope-wrapper[data-pos="hidden-right"] {
+      transform: translateX(460px) scale(0.5);
+    }
+    .message-card {
+      height: 158px;
+    }
+    .message-photo {
+      height: 122px;
+    }
+    .envelope-wrapper.open .message-card {
+      transform: translateY(-205px);
+      height: 395px;
+    }
+    .envelope-wrapper.open .message-photo {
+      height: 240px;
+    }
+  }
+
+    .hint-scroll {
     margin-top: 1.5rem;
     font-size: 0.68rem;
     color: var(--mid);
@@ -609,7 +675,7 @@
 
 <!-- ─── LETTRE ─── -->
 <section class="letter-section">
-  <div class="section-label fade-in">LOVE YOU</div>
+  <div class="section-label fade-in">Pour toi</div>
 
   <div class="letter-body fade-in">
     <p class="salutation">Mon Amour,</p>
@@ -619,9 +685,9 @@
       Le tien est de ceux qu'on chérit — parce qu'il marque le jour où
       le monde a eu la bonne idée de te mettre sur ma route.
     </p>
-<p>Je voulais t'écrire aujourd'hui, juste pour toi, pour te dire les choses qui me viennent en tête quand je t'observe - quand tu ne sais pas que je te regarde.</p>
-                
-                <p>C'est aussi dans ces moments-là que je comprends vraiment à quel point tu as changé ma vie. De façon douce, silencieuse, agréable.</p>
+    <p>Je voulais t'écrire aujourd'hui, juste pour toi, pour te dire les choses qui me viennent en tête quand je t'observe - quand tu ne sais pas que je te regarde.</p>
+
+    <p>C'est aussi dans ces moments-là que je comprends vraiment à quel point tu as changé ma vie. De façon douce, silencieuse, agréable.</p>
     <p>
       Depuis que tu es dans ma vie, les jours ont une couleur différente.
       Pas toujours parfaite, mais toujours plus belle avec toi à côté.
@@ -629,11 +695,11 @@
       et je ne veux pas m'y habituer.
     </p>
 
-     <p>Avant toi, je ne savais pas que c'était une force. Avec toi, j'ai découvert que se montrer tel qu'on est vraiment - avec ses peurs, ses rêves, ses petites manies - c'est l'acte le plus courageux que l'on puisse faire.</p>
-                
-                <p>Ces moments où l'on ne dit rien, juste assis côte à côte, ta tête sur mon épaule, ou la mienne sur la tienne, sont mes préférés. Parce que c'est là, dans le silence complice, que je sens davantage notre connexion.</p>
-                
-                <p>C'est là que je sais que j'ai trouvé mon âme sœur. Tu me rends meilleur. Plus patient, plus doux, plus entier.</p>
+    <p>Avant toi, je ne savais pas que c'était une force. Avec toi, j'ai découvert que se montrer tel qu'on est vraiment - avec ses peurs, ses rêves, ses petites manies - c'est l'acte le plus courageux que l'on puisse faire.</p>
+
+    <p>Ces moments où l'on ne dit rien, juste assis côte à côte, ta tête sur mon épaule, ou la mienne sur la tienne, sont mes préférés. Parce que c'est là, dans le silence complice, que je sens davantage notre connexion.</p>
+
+    <p>C'est là que je sais que j'ai trouvé mon âme sœur. Tu me rends meilleur. Plus patient, plus doux, plus entier.</p>
 
     <p>
       Aujourd'hui c'est ton jour. J'espère qu'il est aussi doux,
@@ -641,8 +707,8 @@
     </p>
 
     <p>Merci d'être toi. Merci de me laisser t'aimer et merci de m'aimer en retour.</p>
-                
-                <p>L'avenir nous réserve encore d'innombrables souvenirs, étapes de la vie et partages.</p>
+
+    <p>L'avenir nous réserve encore d'innombrables souvenirs, étapes de la vie et partages.</p>
 
     <p class="closing">
       Avec tout l'amour que je sais donner — et même un peu plus,
@@ -672,6 +738,15 @@
           </div>
         </div>
         <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
+        <div class="envelope-seal">
+          <svg width="58" height="58" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg">
+            <path d="M29 2 L32.8 10.5 L42 6.5 L39.8 16.2 L50 15.5 L46 24.8 L55.5 27.5 L49 34.2 L54.5 42 L44.8 42.5 L45.5 53 L36.5 49 L33 57.5 L29 50.5 L25 57.5 L21.5 49 L12.5 53 L13.2 42.5 L3.5 42 L9 34.2 L2.5 27.5 L12 24.8 L8 15.5 L18.2 16.2 L16 6.5 L25.2 10.5 Z" fill="#9b3535"/>
+            <path d="M29 2 L32.8 10.5 L42 6.5 L39.8 16.2 L50 15.5 L46 24.8 L55.5 27.5 L49 34.2 L54.5 42 L44.8 42.5 L45.5 53 L36.5 49 L33 57.5 L29 50.5 L25 57.5 L21.5 49 L12.5 53 L13.2 42.5 L3.5 42 L9 34.2 L2.5 27.5 L12 24.8 L8 15.5 L18.2 16.2 L16 6.5 L25.2 10.5 Z" fill="none" stroke="rgba(255,200,200,0.2)" stroke-width="1.5"/>
+            <circle cx="29" cy="29" r="17" fill="none" stroke="rgba(255,220,220,0.3)" stroke-width="1"/>
+            <circle cx="29" cy="29" r="13.5" fill="none" stroke="rgba(255,220,220,0.18)" stroke-width="0.75"/>
+            <text x="29" y="34.5" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="18" font-style="italic" fill="rgba(255,235,235,0.88)">G</text>
+          </svg>
+        </div>
         <div class="envelope-flap"></div>
       </div>
 
@@ -685,6 +760,15 @@
           </div>
         </div>
         <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
+        <div class="envelope-seal">
+          <svg width="58" height="58" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg">
+            <path d="M29 2 L32.8 10.5 L42 6.5 L39.8 16.2 L50 15.5 L46 24.8 L55.5 27.5 L49 34.2 L54.5 42 L44.8 42.5 L45.5 53 L36.5 49 L33 57.5 L29 50.5 L25 57.5 L21.5 49 L12.5 53 L13.2 42.5 L3.5 42 L9 34.2 L2.5 27.5 L12 24.8 L8 15.5 L18.2 16.2 L16 6.5 L25.2 10.5 Z" fill="#9b3535"/>
+            <path d="M29 2 L32.8 10.5 L42 6.5 L39.8 16.2 L50 15.5 L46 24.8 L55.5 27.5 L49 34.2 L54.5 42 L44.8 42.5 L45.5 53 L36.5 49 L33 57.5 L29 50.5 L25 57.5 L21.5 49 L12.5 53 L13.2 42.5 L3.5 42 L9 34.2 L2.5 27.5 L12 24.8 L8 15.5 L18.2 16.2 L16 6.5 L25.2 10.5 Z" fill="none" stroke="rgba(255,200,200,0.2)" stroke-width="1.5"/>
+            <circle cx="29" cy="29" r="17" fill="none" stroke="rgba(255,220,220,0.3)" stroke-width="1"/>
+            <circle cx="29" cy="29" r="13.5" fill="none" stroke="rgba(255,220,220,0.18)" stroke-width="0.75"/>
+            <text x="29" y="34.5" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="18" font-style="italic" fill="rgba(255,235,235,0.88)">G</text>
+          </svg>
+        </div>
         <div class="envelope-flap"></div>
       </div>
 
@@ -698,6 +782,15 @@
           </div>
         </div>
         <div class="envelope-front"><div class="envelope-front-bottom"></div></div>
+        <div class="envelope-seal">
+          <svg width="58" height="58" viewBox="0 0 58 58" xmlns="http://www.w3.org/2000/svg">
+            <path d="M29 2 L32.8 10.5 L42 6.5 L39.8 16.2 L50 15.5 L46 24.8 L55.5 27.5 L49 34.2 L54.5 42 L44.8 42.5 L45.5 53 L36.5 49 L33 57.5 L29 50.5 L25 57.5 L21.5 49 L12.5 53 L13.2 42.5 L3.5 42 L9 34.2 L2.5 27.5 L12 24.8 L8 15.5 L18.2 16.2 L16 6.5 L25.2 10.5 Z" fill="#9b3535"/>
+            <path d="M29 2 L32.8 10.5 L42 6.5 L39.8 16.2 L50 15.5 L46 24.8 L55.5 27.5 L49 34.2 L54.5 42 L44.8 42.5 L45.5 53 L36.5 49 L33 57.5 L29 50.5 L25 57.5 L21.5 49 L12.5 53 L13.2 42.5 L3.5 42 L9 34.2 L2.5 27.5 L12 24.8 L8 15.5 L18.2 16.2 L16 6.5 L25.2 10.5 Z" fill="none" stroke="rgba(255,200,200,0.2)" stroke-width="1.5"/>
+            <circle cx="29" cy="29" r="17" fill="none" stroke="rgba(255,220,220,0.3)" stroke-width="1"/>
+            <circle cx="29" cy="29" r="13.5" fill="none" stroke="rgba(255,220,220,0.18)" stroke-width="0.75"/>
+            <text x="29" y="34.5" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="18" font-style="italic" fill="rgba(255,235,235,0.88)">G</text>
+          </svg>
+        </div>
         <div class="envelope-flap"></div>
       </div>
 
@@ -711,7 +804,7 @@
 </section>
 
 <footer>
-  Fait avec amour · Rien que pour toi
+  Fait avec amour · Rien que pour toi · 12 avril 2025
 </footer>
 
 <script>
