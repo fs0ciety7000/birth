@@ -1077,6 +1077,26 @@
     max-height: 60px;
     opacity: 0.7;
   }
+
+  footer {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+    margin-top: 0;
+  }
+  .footer-text {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.12em;
+    color: #c9a99a;
+    margin: 0 0 0.4rem;
+    text-transform: uppercase;
+  }
+  .footer-hearts {
+    font-size: 0.75rem;
+    color: #d4a0a0;
+    letter-spacing: 0.4em;
+    margin: 0;
+  }
 </style>
 </head>
 <body>
@@ -1494,13 +1514,13 @@
   var FALLBACK_MESSAGES = [
     {
       photo: 'img/laurence.webp',
-      author: 'Laurence \U0001f90d',
+      author: 'Laurence 🤍',
       greeting: 'Ma belle Grace,',
       paragraphs: [
         "Je ne pouvais pas laisser passer ce jour sans te dire \u00e0 quel point tu comptes pour moi.",
         "Tu as cette fa\u00e7on unique de rendre la vie plus belle \u2014 par ta pr\u00e9sence, tes \u00e9clats de rire, ta fa\u00e7on d'\u00eatre l\u00e0 vraiment quand \u00e7a compte.",
         "Depuis le premier jour, tu m'as montr\u00e9 ce que \u00e7a veut dire d'\u00eatre une vraie amie. G\u00e9n\u00e9reuse, sinc\u00e8re, lumineuse.",
-        "Ce jour est le tien. Profite de chaque seconde. \U0001f338"
+        "Ce jour est le tien. Profite de chaque seconde. 🌸"
       ]
     },
     {
@@ -1516,13 +1536,13 @@
     },
     {
       photo: 'img/groupe.webp',
-      author: 'La Team \U0001f942',
+      author: 'La Team 🥂',
       greeting: 'Ch\u00e8re Grace,',
       paragraphs: [
         "On n'allait pas laisser ton anniversaire passer sans te dire \u00e0 quel point tu comptes pour chacun d'entre nous.",
         "Tu es de celles qui cimentent un groupe. Qui cr\u00e9ent les souvenirs dont on parle encore des ann\u00e9es apr\u00e8s.",
         "Aujourd'hui, on l\u00e8ve tous un verre \u00e0 toi \u2014 \u00e0 ta joie de vivre, \u00e0 ta force, \u00e0 ta lumi\u00e8re.",
-        "On t'aime \u00e9norme ! \U0001f942"
+        "On t'aime énorme ! 🥂"
       ]
     }
   ];
@@ -1548,7 +1568,7 @@
         '</div>' +
         '<div class="envelope-front"><div class="envelope-front-bottom"></div></div>' +
         '<div class="envelope-flap"></div>' +
-        '<div class="envelope-seal">\U0001f90d</div>';
+        '<div class="envelope-seal">🤍</div>';
       stage.appendChild(wrap);
       observer.observe(wrap);
     });
