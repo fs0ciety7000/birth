@@ -851,16 +851,20 @@
       --stage-w: calc(100vw - 7rem);
     }
     .msg-modal-backdrop {
-      padding: 0.5rem;
-      align-items: flex-end;
+      padding: 0;
+      align-items: stretch;
     }
     .msg-modal {
       width: 100%;
-      max-height: 92vh;
-      border-radius: 16px 16px 0 0;
+      height: 100%;
+      max-height: 100vh;
+      max-height: 100dvh;
+      border-radius: 0;
+      transform: none !important;
+      transition: none !important;
     }
     .msg-modal-body {
-      padding: 0.2rem 1.2rem 1.5rem;
+      padding: 0.2rem 1.2rem 2rem;
     }
   }
 
@@ -1651,9 +1655,14 @@
     var bodyEl    = document.getElementById('msgModalBody');
 
     var currentOpenWrapper = null;
+    var savedScrollY = 0;
 
     function openModal(msg, wrapper) {
       currentOpenWrapper = wrapper || null;
+      savedScrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = '-' + savedScrollY + 'px';
+      document.body.style.width = '100%';
       if (msg.photo) {
         photoEl.src = msg.photo;
         photoEl.alt = msg.author;
@@ -1669,11 +1678,15 @@
       backdrop.style.display = 'flex';
       requestAnimationFrame(function() {
         backdrop.classList.add('open');
-        bodyEl.scrollTop = 0;
+        backdrop.scrollTop = 0;
       });
     }
 
     function closeModal() {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, savedScrollY);
       backdrop.classList.remove('open');
       // Referme l'enveloppe et la marque comme lue
       if (currentOpenWrapper) {
