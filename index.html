@@ -718,33 +718,31 @@
     background: white;
     border-radius: 12px;
     width: min(420px, 100%);
-    max-height: 88vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
     box-shadow: 0 24px 80px rgba(58,42,42,0.3);
     transform: scale(0.92) translateY(20px);
     transition: transform 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
   }
+  .msg-modal::-webkit-scrollbar { display: none; }
 
   .msg-modal-backdrop.open .msg-modal {
     transform: scale(1) translateY(0);
   }
 
-  /* Full photo — capped height, cropped to fill */
+  /* Full photo — natural size, no crop */
   .msg-modal-photo-wrap {
     position: relative;
     flex-shrink: 0;
-    max-height: 42vh;
-    overflow: hidden;
   }
 
   .msg-modal-photo {
     width: 100%;
-    height: 42vh;
-    max-height: 42vh;
-    object-fit: cover;
-    object-position: top center;
+    height: auto;
     display: block;
     flex-shrink: 0;
   }
@@ -758,18 +756,12 @@
     pointer-events: none;
   }
 
-  /* Scrollable text area */
+  /* Text area — no independent scroll, modal scrolls as a whole */
   .msg-modal-body {
     flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow-y: visible;
     padding: 0.2rem 1.6rem 1.8rem;
-    scrollbar-width: thin;
-    scrollbar-color: var(--blush) transparent;
   }
-
-  .msg-modal-body::-webkit-scrollbar { width: 3px; }
-  .msg-modal-body::-webkit-scrollbar-thumb { background: var(--blush); border-radius: 2px; }
 
   /* Scroll indicator strip at bottom of modal */
   .msg-modal-scroll-hint {
@@ -866,11 +858,6 @@
       width: 100%;
       max-height: 92vh;
       border-radius: 16px 16px 0 0;
-    }
-    .msg-modal-photo,
-    .msg-modal-photo-wrap {
-      height: 32vh;
-      max-height: 32vh;
     }
     .msg-modal-body {
       padding: 0.2rem 1.2rem 1.5rem;
