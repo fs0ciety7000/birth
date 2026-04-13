@@ -13,7 +13,10 @@
       "Bash(sed -n '420,475p' /var/home/phantomhex/Documents/code/birthday/index.html)",
       "Bash(sed -n '448,460p' /var/home/phantomhex/Documents/code/birthday/index.html)",
       "Bash(sed -n '395,420p' /var/home/phantomhex/Documents/code/birthday/index.html)",
-      "Bash(sed -n '474,500p' /var/home/phantomhex/Documents/code/birthday/index.html)"
+      "Bash(sed -n '474,500p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
