@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Messages Grace</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream: #fdf8f3;
+  --blush: #e8c4b8;
+  --rose: #c9897a;
+  --deep: #3a2a2a;
+  --mid: #6b4c4c;
+  --light: #f5ede6;
+  --gold: #c9a96e;
+  --ok: #5a9e7c;
+  --err: #c9534f;
+  --border: rgba(201,137,122,0.2);
+}
+
+body {
+  background: var(--cream);
+  color: var(--deep);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
+
+/* ── Gate ── */
+#gate {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+}
+#gate h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--rose);
+}
+#gate p { font-size: 0.82rem; color: var(--mid); opacity: 0.6; }
+#gate input {
+  width: 260px;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 1rem;
+  background: white;
+  text-align: center;
+  letter-spacing: 0.15em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#gate input:focus { border-color: var(--rose); }
+#gate button {
+  width: 260px;
+  padding: 0.75rem;
+  background: var(--rose);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+#gate button:hover { opacity: 0.85; }
+#gate .gate-error {
+  font-size: 0.78rem;
+  color: var(--err);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* ── App ── */
+#app { display: none; }
+
+.topbar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--rose);
+}
+.topbar-actions { display: flex; gap: 0.6rem; align-items: center; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, background 0.2s;
+}
+.btn:hover { opacity: 0.82; }
+.btn-primary { background: var(--rose); color: white; }
+.btn-gold    { background: var(--gold); color: white; }
+.btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--mid); }
+.btn-danger  { background: var(--err); color: white; }
+.btn-sm { padding: 0.35rem 0.7rem; font-size: 0.72rem; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* ── Status bar ── */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  margin-bottom: 1.5rem;
+  background: var(--light);
+  border: 1px solid var(--border);
+  min-height: 42px;
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--mid);
+  opacity: 0.4;
+}
+.status-bar.loading .status-dot { background: var(--gold); opacity: 1; animation: pulse 1s infinite; }
+.status-bar.success .status-dot { background: var(--ok); opacity: 1; }
+.status-bar.error   .status-dot { background: var(--err); opacity: 1; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ── Settings panel ── */
+.settings-panel {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.settings-panel h3 {
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1.2rem;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+@media (max-width: 600px) { .settings-grid { grid-template-columns: 1fr; } }
+.field label {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mid);
+  margin-bottom: 0.35rem;
+}
+.field input, .field textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 300;
+  color: var(--deep);
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus, .field textarea:focus { border-color: var(--rose); }
+.field textarea { resize: vertical; min-height: 80px; }
+.field-full { grid-column: 1 / -1; }
+.field-hint {
+  font-size: 0.7rem;
+  color: var(--mid);
+  opacity: 0.6;
+  margin-top: 0.3rem;
+}
+
+/* ── Messages list ── */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.section-head h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 400;
+  font-size: 1.4rem;
+  color: var(--deep);
+}
+
+.msg-list { display: flex; flex-direction: column; gap: 0.7rem; }
+
+.msg-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: grab;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.msg-card:hover { border-color: var(--blush); box-shadow: 0 2px 12px rgba(201,137,122,0.1); }
+.msg-card.dragging { opacity: 0.5; box-shadow: 0 6px 24px rgba(0,0,0,0.15); }
+.msg-card.drag-over { border-color: var(--rose); background: var(--light); }
+
+.msg-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--light);
+  border: 2px solid var(--border);
+}
+.msg-avatar-placeholder {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--light);
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.msg-info { flex: 1; min-width: 0; }
+.msg-author { font-weight: 400; font-size: 0.95rem; }
+.msg-preview {
+  font-size: 0.78rem;
+  color: var(--mid);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 0.15rem;
+}
+
+.drag-handle {
+  color: var(--mid);
+  opacity: 0.3;
+  cursor: grab;
+  padding: 0.2rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.msg-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--mid);
+  opacity: 0.5;
+  font-size: 0.88rem;
+}
+
+/* ── Edit modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(58,42,42,0.45);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+  background: var(--cream);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.modal-box h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--rose);
+  margin-bottom: 1.5rem;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+}
+
+/* Photo upload zone */
+.photo-upload {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--light);
+  transition: border-color 0.2s;
+  margin-bottom: 0.5rem;
+}
+.photo-upload:hover { border-color: var(--rose); }
+.photo-upload.drag-active { border-color: var(--rose); background: rgba(201,137,122,0.05); }
+.photo-upload img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.photo-upload.has-photo img { display: block; }
+.photo-upload-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: var(--mid);
+  opacity: 0.5;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+.photo-upload.has-photo .photo-upload-placeholder { display: none; }
+.photo-upload-placeholder span { font-size: 2rem; }
+.photo-upload input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.photo-clear {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(58,42,42,0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.photo-upload.has-photo .photo-clear { display: flex; }
+
+/* Paragraphs editor */
+.paras-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
+.para-row { display: flex; gap: 0.5rem; align-items: flex-start; }
+.para-row textarea { flex: 1; min-height: 60px; }
+.para-del { flex-shrink: 0; margin-top: 0.3rem; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--deep);
+  color: white;
+  padding: 0.75rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s, transform 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.ok    { background: var(--ok); }
+.toast.fail  { background: var(--err); }
+</style>
+</head>
+<body>
+
+<!-- ── Gate ── -->
+<div id="gate">
+  <h1>Admin ✦</h1>
+  <p>Accès réservé</p>
+  <input type="password" id="gateInput" placeholder="Mot de passe" autocomplete="current-password">
+  <button onclick="checkGate()">Entrer</button>
+  <p class="gate-error" id="gateError">Mot de passe incorrect</p>
+</div>
+
+<!-- ── App ── -->
+<div id="app">
+  <div class="topbar">
+    <span class="topbar-title">Messages · Grace</span>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="window.open('index.html','_blank')">Voir le site ↗</button>
+      <button class="btn btn-gold" id="publishBtn" onclick="publishToGitHub()" disabled>
+        ✦ Publier
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Status -->
+    <div class="status-bar" id="statusBar">
+      <div class="status-dot"></div>
+      <span id="statusText">Configure le dépôt GitHub ci-dessous pour commencer.</span>
+    </div>
+
+    <!-- GitHub settings -->
+    <div class="settings-panel">
+      <h3>⚙ Configuration GitHub</h3>
+      <div class="settings-grid">
+        <div class="field">
+          <label>Propriétaire du dépôt</label>
+          <input type="text" id="ghOwner" placeholder="ex: nicolasdessenius" oninput="saveConfig()">
+        </div>
+        <div class="field">
+          <label>Nom du dépôt</label>
+          <input type="text" id="ghRepo" placeholder="ex: birthday" oninput="saveConfig()">
+        </div>
+        <div class="field field-full">
+          <label>Token GitHub</label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveConfig()">
+          <p class="field-hint">Token → GitHub.com › Settings › Developer settings › Personal access tokens (Fine-grained) — permission <strong>Contents: Read &amp; Write</strong></p>
+        </div>
+      </div>
+      <div style="margin-top:1rem; display:flex; gap:.6rem;">
+        <button class="btn btn-ghost btn-sm" onclick="testConfig()">Tester la connexion</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadFromGitHub()">↓ Charger les messages</button>
+      </div>
+    </div>
+
+    <!-- Messages list -->
+    <div class="section-head">
+      <h2>Messages</h2>
+      <button class="btn btn-primary" onclick="openEditor(null)">+ Ajouter</button>
+    </div>
+
+    <div class="msg-list" id="msgList"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      Aucun message. Clique sur <strong>+ Ajouter</strong> pour commencer.
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit modal ── -->
+<div class="modal-overlay" id="editOverlay">
+  <div class="modal-box">
+    <h3 id="editorTitle">Nouveau message</h3>
+
+    <div class="settings-grid">
+      <div class="field field-full">
+        <label>Photo</label>
+        <div class="photo-upload" id="photoZone">
+          <img id="photoPreview" src="" alt="">
+          <div class="photo-upload-placeholder">
+            <span>🖼</span>
+            <p>Cliquer ou glisser une photo</p>
+            <p style="font-size:.68rem; opacity:.7">Max 5 Mo · JPEG/PNG/WebP — sera redimensionnée</p>
+          </div>
+          <input type="file" id="photoFile" accept="image/*" onchange="handlePhoto(this)">
+          <button class="photo-clear" onclick="clearPhoto(event)">✕</button>
+        </div>
+        <input type="text" id="photoUrl" placeholder="ou URL / chemin existant (ex: img/laurence.webp)"
+               style="margin-top:0.4rem" oninput="syncPhotoUrl()">
+      </div>
+
+      <div class="field">
+        <label>Nom de l'expéditeur</label>
+        <input type="text" id="fAuthor" placeholder="ex: Laurence 🤍">
+      </div>
+      <div class="field">
+        <label>Accroche</label>
+        <input type="text" id="fGreeting" placeholder="ex: Ma belle Grace,">
+      </div>
+
+      <div class="field field-full">
+        <label>Paragraphes du message</label>
+        <div class="paras-list" id="parasList"></div>
+        <button class="btn btn-ghost btn-sm" onclick="addPara()">+ Paragraphe</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditor()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveMessage()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Auth ────────────────────────────────────────────────────────────────────
+var ADMIN_PASS = 'grace2026';
+
+document.getElementById('gateInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') checkGate();
+});
+
+function checkGate() {
+  var val = document.getElementById('gateInput').value;
+  if (val === ADMIN_PASS) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  } else {
+    var err = document.getElementById('gateError');
+    err.style.opacity = '1';
+    setTimeout(function() { err.style.opacity = '0'; }, 2000);
+    document.getElementById('gateInput').value = '';
+  }
+}
+
+// ── State ───────────────────────────────────────────────────────────────────
+var messages = [];   // working copy
+var currentSha = ''; // GitHub file SHA (needed for updates)
+var editIndex = null; // null = new, number = edit
+
+// ── GitHub config ───────────────────────────────────────────────────────────
+function saveConfig() {
+  localStorage.setItem('ghConfig', JSON.stringify({
+    owner: document.getElementById('ghOwner').value.trim(),
+    repo:  document.getElementById('ghRepo').value.trim(),
+    token: document.getElementById('ghToken').value.trim()
+  }));
+}
+
+function getConfig() {
+  return JSON.parse(localStorage.getItem('ghConfig') || '{}');
+}
+
+function apiUrl() {
+  var c = getConfig();
+  return 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/messages.json';
+}
+
+function apiHeaders() {
+  return {
+    'Authorization': 'token ' + getConfig().token,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json'
+  };
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+function init() {
+  var c = getConfig();
+  if (c.owner) document.getElementById('ghOwner').value = c.owner;
+  if (c.repo)  document.getElementById('ghRepo').value  = c.repo;
+  if (c.token) document.getElementById('ghToken').value = c.token;
+
+  if (c.owner && c.repo && c.token) {
+    loadFromGitHub();
+  } else {
+    renderList();
+  }
+}
+
+// ── GitHub API ──────────────────────────────────────────────────────────────
+function setStatus(type, text) {
+  var bar  = document.getElementById('statusBar');
+  var span = document.getElementById('statusText');
+  bar.className  = 'status-bar ' + type;
+  span.textContent = text;
+}
+
+function loadFromGitHub() {
+  var c = getConfig();
+  if (!c.owner || !c.repo || !c.token) {
+    setStatus('error', 'Configuration incomplète — remplis les champs GitHub.');
+    return;
+  }
+  setStatus('loading', 'Chargement depuis GitHub…');
+  fetch(apiUrl(), { headers: apiHeaders() })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      currentSha = data.sha;
+      var decoded = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+      messages = JSON.parse(decoded);
+      setStatus('success', messages.length + ' message(s) chargé(s) · SHA: ' + currentSha.slice(0,7));
+      document.getElementById('publishBtn').disabled = false;
+      renderList();
+    })
+    .catch(function(err) {
+      setStatus('error', 'Erreur chargement: ' + err.message);
+      toast('Impossible de charger depuis GitHub', 'fail');
+    });
+}
+
+function testConfig() {
+  var c = getConfig();
+  if (!c.owner || !c.repo || !c.token) { toast('Config incomplète', 'fail'); return; }
+  setStatus('loading', 'Test de connexion…');
+  fetch('https://api.github.com/repos/' + c.owner + '/' + c.repo, { headers: apiHeaders() })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      setStatus('success', 'Connecté à ' + data.full_name + ' ✓');
+      toast('Connexion OK', 'ok');
+    })
+    .catch(function(err) {
+      setStatus('error', 'Connexion échouée: ' + err.message);
+      toast('Connexion échouée', 'fail');
+    });
+}
+
+function publishToGitHub() {
+  var c = getConfig();
+  if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
+
+  setStatus('loading', 'Publication en cours…');
+  document.getElementById('publishBtn').disabled = true;
+
+  var json = JSON.stringify(messages, null, 2);
+  var encoded = btoa(unescape(encodeURIComponent(json)));
+
+  var body = {
+    message: 'Update messages via admin · ' + new Date().toISOString().slice(0,10),
+    content: encoded
+  };
+  if (currentSha) body.sha = currentSha;
+
+  fetch(apiUrl(), {
+    method: 'PUT',
+    headers: apiHeaders(),
+    body: JSON.stringify(body)
+  })
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(d) { throw new Error(d.message || 'HTTP ' + r.status); });
+      return r.json();
+    })
+    .then(function(data) {
+      currentSha = data.content.sha;
+      setStatus('success', 'Publié ✓ · Netlify redéploie dans ~30s');
+      document.getElementById('publishBtn').disabled = false;
+      toast('Publié ! Le site sera mis à jour dans ~30s', 'ok');
+    })
+    .catch(function(err) {
+      setStatus('error', 'Erreur publication: ' + err.message);
+      document.getElementById('publishBtn').disabled = false;
+      toast('Erreur: ' + err.message, 'fail');
+    });
+}
+
+// ── List rendering ──────────────────────────────────────────────────────────
+function renderList() {
+  var list  = document.getElementById('msgList');
+  var empty = document.getElementById('emptyState');
+  list.innerHTML = '';
+  empty.style.display = messages.length === 0 ? 'block' : 'none';
+
+  messages.forEach(function(msg, i) {
+    var card = document.createElement('div');
+    card.className = 'msg-card';
+    card.draggable = true;
+    card.dataset.index = i;
+
+    // Avatar
+    var photoHTML;
+    if (msg.photo) {
+      photoHTML = '<img class="msg-avatar" src="' + escHtml(msg.photo) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+                + '<div class="msg-avatar-placeholder" style="display:none">💌</div>';
+    } else {
+      photoHTML = '<div class="msg-avatar-placeholder">💌</div>';
+    }
+
+    card.innerHTML =
+      '<span class="drag-handle">⠿</span>' +
+      photoHTML +
+      '<div class="msg-info">' +
+        '<div class="msg-author">' + escHtml(msg.author || '—') + '</div>' +
+        '<div class="msg-preview">' + escHtml((msg.paragraphs || [''])[0] || '') + '</div>' +
+      '</div>' +
+      '<div class="msg-actions">' +
+        '<button class="btn btn-ghost btn-sm" onclick="openEditor(' + i + ')">Éditer</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteMsg(' + i + ')">✕</button>' +
+      '</div>';
+
+    // Drag events
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('dragover',  onDragOver);
+    card.addEventListener('dragleave', onDragLeave);
+    card.addEventListener('drop',      onDrop);
+    card.addEventListener('dragend',   onDragEnd);
+
+    list.appendChild(card);
+  });
+}
+
+// ── Drag & drop reorder ──────────────────────────────────────────────────────
+var dragSrc = null;
+
+function onDragStart(e) {
+  dragSrc = this;
+  this.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  this.classList.add('drag-over');
+}
+function onDragLeave() { this.classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  this.classList.remove('drag-over');
+  if (dragSrc === this) return;
+  var fromIdx = parseInt(dragSrc.dataset.index);
+  var toIdx   = parseInt(this.dataset.index);
+  var moved   = messages.splice(fromIdx, 1)[0];
+  messages.splice(toIdx, 0, moved);
+  renderList();
+}
+function onDragEnd() {
+  this.classList.remove('dragging');
+  document.querySelectorAll('.msg-card').forEach(function(c) { c.classList.remove('drag-over'); });
+}
+
+// ── Delete ──────────────────────────────────────────────────────────────────
+function deleteMsg(i) {
+  if (!confirm('Supprimer le message de ' + (messages[i].author || '?') + ' ?')) return;
+  messages.splice(i, 1);
+  renderList();
+  toast('Message supprimé', 'ok');
+}
+
+// ── Editor modal ─────────────────────────────────────────────────────────────
+function openEditor(i) {
+  editIndex = i;
+  var msg   = i !== null ? messages[i] : { photo: '', author: '', greeting: '', paragraphs: [''] };
+
+  document.getElementById('editorTitle').textContent = i !== null ? 'Modifier le message' : 'Nouveau message';
+  document.getElementById('fAuthor').value   = msg.author   || '';
+  document.getElementById('fGreeting').value = msg.greeting || '';
+  document.getElementById('photoUrl').value  = '';
+
+  // Photo
+  var zone    = document.getElementById('photoZone');
+  var preview = document.getElementById('photoPreview');
+  zone._base64 = null;
+
+  if (msg.photo && msg.photo.startsWith('data:')) {
+    preview.src = msg.photo;
+    zone.classList.add('has-photo');
+    zone._base64 = msg.photo;
+  } else if (msg.photo) {
+    preview.src = msg.photo;
+    zone.classList.add('has-photo');
+    document.getElementById('photoUrl').value = msg.photo;
+  } else {
+    preview.src = '';
+    zone.classList.remove('has-photo');
+  }
+
+  // Paragraphs
+  buildParasUI(msg.paragraphs || ['']);
+
+  document.getElementById('editOverlay').classList.add('open');
+}
+
+function closeEditor() {
+  document.getElementById('editOverlay').classList.remove('open');
+}
+
+function buildParasUI(paras) {
+  var list = document.getElementById('parasList');
+  list.innerHTML = '';
+  (paras.length ? paras : ['']).forEach(function(p) { addParaRow(p); });
+}
+
+function addPara() { addParaRow(''); }
+
+function addParaRow(text) {
+  var list = document.getElementById('parasList');
+  var row  = document.createElement('div');
+  row.className = 'para-row';
+  var ta = document.createElement('textarea');
+  ta.className = 'field';
+  ta.style.flex = '1';
+  ta.style.minHeight = '60px';
+  ta.style.padding = '0.6rem 0.8rem';
+  ta.style.border = '1.5px solid var(--border)';
+  ta.style.borderRadius = '6px';
+  ta.style.fontFamily = "'Jost', sans-serif";
+  ta.style.fontSize = '0.88rem';
+  ta.style.fontWeight = '300';
+  ta.style.outline = 'none';
+  ta.style.resize = 'vertical';
+  ta.style.width = '100%';
+  ta.value = text;
+  var del = document.createElement('button');
+  del.className = 'btn btn-ghost btn-sm para-del';
+  del.textContent = '✕';
+  del.onclick = function() { list.removeChild(row); };
+  row.appendChild(ta);
+  row.appendChild(del);
+  list.appendChild(row);
+}
+
+function saveMessage() {
+  var author   = document.getElementById('fAuthor').value.trim();
+  var greeting = document.getElementById('fGreeting').value.trim();
+  var urlField = document.getElementById('photoUrl').value.trim();
+  var zone     = document.getElementById('photoZone');
+
+  var photo = zone._base64 || urlField || '';
+
+  var paras = Array.from(document.querySelectorAll('#parasList textarea'))
+    .map(function(ta) { return ta.value.trim(); })
+    .filter(Boolean);
+
+  if (!author) { toast('Le nom est requis', 'fail'); return; }
+
+  var msg = { photo: photo, author: author, greeting: greeting, paragraphs: paras };
+
+  if (editIndex !== null) {
+    messages[editIndex] = msg;
+  } else {
+    messages.push(msg);
+  }
+
+  closeEditor();
+  renderList();
+  toast(editIndex !== null ? 'Message mis à jour' : 'Message ajouté', 'ok');
+}
+
+// ── Photo upload ─────────────────────────────────────────────────────────────
+function handlePhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Photo trop lourde (max 5 Mo)', 'fail'); return; }
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    resizePhoto(e.target.result, 900, function(dataUrl) {
+      var zone    = document.getElementById('photoZone');
+      var preview = document.getElementById('photoPreview');
+      preview.src = dataUrl;
+      zone.classList.add('has-photo');
+      zone._base64 = dataUrl;
+      document.getElementById('photoUrl').value = '';
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function resizePhoto(dataUrl, maxSize, cb) {
+  var img = new Image();
+  img.onload = function() {
+    var w = img.width, h = img.height;
+    if (w > maxSize || h > maxSize) {
+      var ratio = Math.min(maxSize / w, maxSize / h);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    cb(canvas.toDataURL('image/jpeg', 0.82));
+  };
+  img.src = dataUrl;
+}
+
+function clearPhoto(e) {
+  e.stopPropagation();
+  var zone    = document.getElementById('photoZone');
+  var preview = document.getElementById('photoPreview');
+  preview.src = '';
+  zone.classList.remove('has-photo');
+  zone._base64 = null;
+  document.getElementById('photoFile').value = '';
+  document.getElementById('photoUrl').value = '';
+}
+
+function syncPhotoUrl() {
+  var val  = document.getElementById('photoUrl').value.trim();
+  var zone = document.getElementById('photoZone');
+  if (val) {
+    document.getElementById('photoPreview').src = val;
+    zone.classList.add('has-photo');
+    zone._base64 = null;
+  } else {
+    document.getElementById('photoPreview').src = '';
+    zone.classList.remove('has-photo');
+  }
+}
+
+// ── Drag-drop on photo zone ──────────────────────────────────────────────────
+(function() {
+  var zone = document.getElementById('photoZone');
+  zone.addEventListener('dragover', function(e) { e.preventDefault(); zone.classList.add('drag-active'); });
+  zone.addEventListener('dragleave', function() { zone.classList.remove('drag-active'); });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.classList.remove('drag-active');
+    var file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    var fakeInput = { files: [file] };
+    handlePhoto(fakeInput);
+  });
+})();
+
+// Close on overlay click
+document.getElementById('editOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeEditor();
+});
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type || '');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.className = 'toast'; }, 3200);
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
