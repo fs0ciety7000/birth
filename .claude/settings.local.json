@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \":*)",
+      "Bash(file /var/home/phantomhex/Documents/code/birthday/img/*.webp)",
+      "Read(//var/home/phantomhex/Documents/code/birthday/**)",
+      "Bash(python3:*)",
+      "Bash(sed -n '574,600p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '625,642p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '714,840p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '221,250p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '655,675p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '420,475p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '448,460p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '395,420p' /var/home/phantomhex/Documents/code/birthday/index.html)",
+      "Bash(sed -n '474,500p' /var/home/phantomhex/Documents/code/birthday/index.html)"
+    ]
+  }
+}
