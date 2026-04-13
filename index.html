@@ -337,6 +337,8 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    position: relative;
+    z-index: 20;
   }
 
   .section-label::before,
@@ -579,6 +581,21 @@
     opacity: 0;
   }
 
+  /* ── Read state ── */
+  .envelope-wrapper.read .envelope-seal {
+    opacity: 1;
+    background: radial-gradient(circle, #a8b8a0 0%, #7a9472 100%);
+    font-size: 11px;
+  }
+  .envelope-wrapper.read .envelope-flap {
+    filter: brightness(0.92);
+  }
+  .envelope-wrapper.read .envelope-front,
+  .envelope-wrapper.read .envelope-back,
+  .envelope-wrapper.read .envelope-front-bottom {
+    filter: brightness(0.94) saturate(0.75);
+  }
+
 
   /* ── Envelope closed card (peek only) ── */
   .message-card {
@@ -630,6 +647,50 @@
     text-transform: uppercase;
     color: var(--dusty-rose);
     margin-left: 0.3rem;
+  }
+
+  /* ── Carousel dots ── */
+  .carousel-dots {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.4rem;
+  }
+  .carousel-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid var(--dusty-rose);
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0.45;
+    transition: background 0.3s, opacity 0.3s, transform 0.2s;
+  }
+  .carousel-dot:hover { opacity: 0.75; transform: scale(1.15); }
+  .carousel-dot.active {
+    background: var(--dusty-rose);
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  .carousel-dot.read {
+    background: #7a9472;
+    border-color: #7a9472;
+    opacity: 0.7;
+  }
+  .carousel-dot.active.read {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+  .envelope-counter {
+    font-family: 'Jost', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    color: var(--dusty-rose);
+    opacity: 0.55;
+    margin-top: 0.6rem;
+    text-align: center;
   }
 
   /* ── MODAL overlay (the real card experience) ── */
@@ -1239,6 +1300,7 @@
   </div>
 
   <div class="carousel-dots" id="carouselDots"></div>
+  <p class="envelope-counter" id="envelopeCounter"></p>
   <p class="hint-scroll">Clique sur l'enveloppe pour l'ouvrir</p>
 </section>
 
@@ -1583,7 +1645,10 @@
     var authorEl  = document.getElementById('msgModalAuthor');
     var bodyEl    = document.getElementById('msgModalBody');
 
-    function openModal(msg) {
+    var currentOpenWrapper = null;
+
+    function openModal(msg, wrapper) {
+      currentOpenWrapper = wrapper || null;
       if (msg.photo) {
         photoEl.src = msg.photo;
         photoEl.alt = msg.author;
@@ -1605,6 +1670,28 @@
 
     function closeModal() {
       backdrop.classList.remove('open');
+      // Referme l'enveloppe et la marque comme lue
+      if (currentOpenWrapper) {
+        var flap = currentOpenWrapper.querySelector('.envelope-flap');
+        var seal = currentOpenWrapper.querySelector('.envelope-seal');
+        if (flap) {
+          flap.style.transition = 'transform 0.5s ease-in-out';
+          flap.style.transform = 'rotateX(0deg)';
+        }
+        currentOpenWrapper.classList.add('read');
+        if (seal) {
+          setTimeout(function() {
+            seal.textContent = '✓';
+            seal.style.opacity = '1';
+          }, 300);
+        }
+        // Met à jour le dot correspondant
+        var idx = parseInt(currentOpenWrapper.dataset.index);
+        var dots = dotsContainer.querySelectorAll('.carousel-dot');
+        if (dots[idx]) dots[idx].classList.add('read');
+        updateCounter();
+        currentOpenWrapper = null;
+      }
       setTimeout(function() { backdrop.style.display = 'none'; }, 350);
     }
 
@@ -1616,6 +1703,13 @@
       if (e.key === 'Escape') closeModal();
     });
     window._openMsgModal = openModal;
+
+    function updateCounter() {
+      var total = getWrappers().length;
+      var readCount = getWrappers().filter(function(w) { return w.classList.contains('read'); }).length;
+      var el = document.getElementById('envelopeCounter');
+      if (el) el.textContent = readCount + ' / ' + total + ' ouvert' + (total > 1 ? 's' : '');
+    }
 
     // Carousel
     var current   = 0;
@@ -1684,12 +1778,13 @@
       if (seal) seal.style.opacity = '0';
       setTimeout(function() {
         var msg = MESSAGES[parseInt(wrapper.dataset.index)];
-        if (msg && window._openMsgModal) window._openMsgModal(msg);
+        if (msg && window._openMsgModal) window._openMsgModal(msg, wrapper);
       }, 300);
     });
 
     update();
     resetAuto();
+    updateCounter();
   }
 
   // Load messages.json, fall back to inline data if unavailable
