@@ -519,9 +519,10 @@ body {
           <p class="field-hint">Token → GitHub.com › Settings › Developer settings › Personal access tokens (Fine-grained) — permission <strong>Contents: Read &amp; Write</strong></p>
         </div>
       </div>
-      <div style="margin-top:1rem; display:flex; gap:.6rem;">
+      <div style="margin-top:1rem; display:flex; gap:.6rem; flex-wrap:wrap;">
         <button class="btn btn-ghost btn-sm" onclick="testConfig()">Tester la connexion</button>
         <button class="btn btn-ghost btn-sm" onclick="loadFromGitHub()">↓ Charger les messages</button>
+        <button class="btn btn-ghost btn-sm" onclick="scanAndLoadPhotos()">↓ Charger les photos</button>
       </div>
     </div>
 
@@ -552,7 +553,7 @@ body {
     </div>
 
     <div style="margin-top:1rem;display:flex;gap:.6rem;">
-      <button class="btn btn-ghost btn-sm" onclick="loadPhotosFromGitHub()">↓ Charger les photos</button>
+      <button class="btn btn-ghost btn-sm" onclick="scanAndLoadPhotos()">↺ Scanner img/web/</button>
       <button class="btn btn-gold" id="publishPhotosBtn" onclick="publishPhotos()" disabled>✦ Publier photos</button>
     </div>
   </div>
@@ -668,6 +669,7 @@ function init() {
 
   if (c.owner && c.repo && c.token) {
     loadFromGitHub();
+    scanAndLoadPhotos();
   } else {
     renderList();
   }
@@ -1055,20 +1057,32 @@ function fileApiUrl(filename) {
   return 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/img/web/' + encodeURIComponent(filename);
 }
 
-function loadPhotosFromGitHub() {
+// Scan réel du dossier img/web/ via GitHub API (plus fiable que photos.json)
+function scanAndLoadPhotos() {
   var c = getConfig();
   if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
-  setStatus('loading', 'Chargement des photos…');
-  fetch(photosApiUrl(), { headers: apiHeaders() })
+  setStatus('loading', 'Scan de img/web/ sur GitHub…');
+  fetch('https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/img/web', { headers: apiHeaders() })
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function(data) {
-      photosSha = data.sha;
-      photos = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
-      setStatus('success', photos.length + ' photo(s) chargée(s)');
+    .then(function(files) {
+      photos = files
+        .filter(function(f) { return f.type === 'file' && /\.(webp|jpg|jpeg|png)$/i.test(f.name); })
+        .sort(function(a, b) { return b.name.localeCompare(a.name); }) // plus récentes en premier
+        .map(function(f) { return 'img/web/' + f.name; });
+      setStatus('success', photos.length + ' photo(s) trouvée(s) dans img/web/');
       document.getElementById('publishPhotosBtn').disabled = false;
       renderPhotos();
     })
-    .catch(function(err) { setStatus('error', 'Erreur: ' + err.message); });
+    .catch(function(err) { setStatus('error', 'Erreur scan: ' + err.message); });
+}
+
+function loadPhotosFromGitHub() { scanAndLoadPhotos(); }
+
+function rawUrl(src) {
+  // Utilise l'URL raw GitHub pour afficher l'image sans attendre le déploiement
+  var c = getConfig();
+  if (!c.owner || !c.repo) return src;
+  return 'https://raw.githubusercontent.com/' + c.owner + '/' + c.repo + '/main/' + src;
 }
 
 function renderPhotos() {
@@ -1079,8 +1093,9 @@ function renderPhotos() {
   photos.forEach(function(src, i) {
     var thumb = document.createElement('div');
     thumb.className = 'photo-thumb';
+    var imgUrl = rawUrl(src);
     thumb.innerHTML =
-      '<img src="' + escHtml(src) + '" alt="" loading="lazy">' +
+      '<img src="' + escHtml(imgUrl) + '" alt="" loading="lazy" onerror="this.style.opacity=\'0.2\'">' +
       '<button class="photo-thumb-del" onclick="deletePhoto(' + i + ')" title="Supprimer">✕</button>';
     grid.appendChild(thumb);
   });
