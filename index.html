@@ -2157,11 +2157,19 @@
     touchX = null;
   });
 
-  // Chargement depuis photos.json, fallback inline
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  // Chargement depuis photos.json, fallback inline — ordre aléatoire à chaque visite
   fetch('photos.json?v=' + Date.now())
     .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function(data) { initPhotos(data); })
-    .catch(function() { initPhotos(FALLBACK_PHOTOS); });
+    .then(function(data) { initPhotos(shuffle(data)); })
+    .catch(function() { initPhotos(shuffle(FALLBACK_PHOTOS.slice())); });
 })();
 </script>
 </body>
