@@ -1101,6 +1101,10 @@ function handlePhotoUpload(input) {
   if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
 
   files.forEach(function(file) {
+    if (file.size > 900 * 1024) {
+      toast('⚠ ' + file.name + ' dépasse 900 Ko — compresse d\'abord l\'image', 'fail');
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(e) {
       var dataUrl  = e.target.result;
@@ -1138,7 +1142,9 @@ function handlePhotoUpload(input) {
         })
         .catch(function(err) {
           thumb.remove();
-          toast('Erreur upload: ' + err.message, 'fail');
+          var msg = err.message || 'Erreur inconnue';
+          toast('Erreur upload: ' + msg.slice(0, 80), 'fail');
+          console.error('Upload error:', msg);
         });
     };
     reader.readAsDataURL(file);

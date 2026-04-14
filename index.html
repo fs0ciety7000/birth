@@ -1201,8 +1201,9 @@
     transition: opacity 1s ease;
     overflow: hidden;
     cursor: zoom-in;
+    pointer-events: none;
   }
-  .trombi-slide.active { opacity: 1; }
+  .trombi-slide.active { opacity: 1; pointer-events: auto; }
 
   /* Fond flouté (même image en arrière-plan) */
   .trombi-bg {
@@ -2103,9 +2104,6 @@
       slide.appendChild(img);
       frame.appendChild(slide);
 
-      // Click → lightbox
-      slide.addEventListener('click', function() { openLightbox(src); });
-
       var dot = document.createElement('button');
       dot.className = 'trombi-dot' + (i === 0 ? ' active' : '');
       dot.setAttribute('aria-label', 'Photo ' + (i + 1));
@@ -2140,6 +2138,14 @@
 
   document.getElementById('trombiPrev').addEventListener('click', function() { goTo(current - 1); });
   document.getElementById('trombiNext').addEventListener('click', function() { goTo(current + 1); });
+
+  // Clic sur le frame → lightbox de la slide active
+  frame.addEventListener('click', function() {
+    var active = frame.querySelector('.trombi-slide.active');
+    if (!active) return;
+    var imgEl = active.querySelector('.trombi-img');
+    if (imgEl) openLightbox(imgEl.src);
+  });
 
   // Swipe
   var touchX = null;
