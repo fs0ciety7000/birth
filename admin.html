@@ -1095,60 +1095,86 @@ function deletePhoto(i) {
 }
 
 function handlePhotoUpload(input) {
-  var files = Array.from(input.files);
-  if (!files.length) return;
+  var files = Array.from(input.files).filter(function(f) {
+    if (f.size > 900 * 1024) {
+      toast('⚠ ' + f.name + ' dépasse 900 Ko — compresse d\'abord', 'fail');
+      return false;
+    }
+    return true;
+  });
+  if (!files.length) { input.value = ''; return; }
   var c = getConfig();
   if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
 
-  files.forEach(function(file) {
-    if (file.size > 900 * 1024) {
-      toast('⚠ ' + file.name + ' dépasse 900 Ko — compresse d\'abord l\'image', 'fail');
-      return;
-    }
+  // Upload séquentiel pour éviter les conflits SHA sur la branche
+  var queue = files.slice();
+  var counter = 0;
+
+  function uploadNext() {
+    if (!queue.length) return;
+    var file = queue.shift();
+    counter++;
+    var idx = counter;
+
     var reader = new FileReader();
     reader.onload = function(e) {
       var dataUrl  = e.target.result;
       var base64   = dataUrl.split(',')[1];
       var ext      = file.name.split('.').pop().toLowerCase();
-      var filename = Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.' + ext;
+      var filename = Date.now() + '_' + idx + '_' + Math.random().toString(36).slice(2,6) + '.' + ext;
+      var path     = 'img/web/' + filename;
 
-      // Preview card with loading state
+      // Vignette preview avec état chargement
       var thumb = document.createElement('div');
       thumb.className = 'photo-thumb uploading';
       thumb.innerHTML = '<img src="' + dataUrl + '" alt="">';
       document.getElementById('photoGrid').prepend(thumb);
       document.getElementById('photoEmptyState').style.display = 'none';
 
-      // Push to GitHub
-      fetch(fileApiUrl(filename), {
-        method: 'PUT',
-        headers: apiHeaders(),
-        body: JSON.stringify({
-          message: 'Add photo ' + filename + ' via admin',
-          content: base64
+      setStatus('loading', 'Upload ' + idx + '/' + files.length + ' — ' + file.name);
+
+      // Vérifier si le fichier existe déjà (récupère le SHA si oui)
+      fetch(fileApiUrl(filename), { headers: apiHeaders() })
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(existing) {
+          var body = {
+            message: 'Add photo ' + filename + ' via admin',
+            content: base64
+          };
+          if (existing && existing.sha) body.sha = existing.sha;
+
+          return fetch(fileApiUrl(filename), {
+            method: 'PUT',
+            headers: apiHeaders(),
+            body: JSON.stringify(body)
+          });
         })
-      })
-        .then(function(r) { if (!r.ok) return r.json().then(function(d) { throw new Error(d.message); }); return r.json(); })
+        .then(function(r) {
+          if (!r.ok) return r.json().then(function(d) { throw new Error(d.message || 'HTTP ' + r.status); });
+          return r.json();
+        })
         .then(function() {
           thumb.classList.remove('uploading');
-          var path = 'img/web/' + filename;
           photos.unshift(path);
-          thumb.innerHTML =
-            '<img src="' + escHtml(path) + '" alt="" loading="lazy">' +
-            '<button class="photo-thumb-del" onclick="deletePhoto(0)" title="Supprimer">✕</button>';
           renderPhotos();
           document.getElementById('publishPhotosBtn').disabled = false;
-          toast('Photo uploadée ! Publie photos.json pour l\'afficher.', 'ok');
+          setStatus('success', 'Photo uploadée : ' + filename);
+          toast('Photo ' + idx + '/' + files.length + ' uploadée ✓', 'ok');
+          uploadNext(); // fichier suivant
         })
         .catch(function(err) {
           thumb.remove();
           var msg = err.message || 'Erreur inconnue';
-          toast('Erreur upload: ' + msg.slice(0, 80), 'fail');
-          console.error('Upload error:', msg);
+          setStatus('error', 'Erreur upload: ' + msg);
+          toast('Erreur: ' + msg.slice(0, 60), 'fail');
+          console.error('Upload error full:', msg);
+          uploadNext(); // continuer malgré l'erreur
         });
     };
     reader.readAsDataURL(file);
-  });
+  }
+
+  uploadNext();
   input.value = '';
 }
 
