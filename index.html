@@ -1148,6 +1148,132 @@
     opacity: 0.7;
   }
 
+  /* ── Trombinoscope ── */
+  .trombi-section {
+    padding: 5rem 0 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .trombi-frame-outer {
+    position: relative;
+    width: min(500px, calc(100vw - 5rem));
+    margin: 2rem auto 0;
+  }
+
+  /* Double cadre doré rustique */
+  .trombi-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border: 3px solid #c9a96e;
+    box-shadow:
+      0 0 0 7px #fdf8f3,
+      0 0 0 10px #c9a96e,
+      0 0 0 17px #fdf8f3,
+      0 12px 50px rgba(0,0,0,0.18);
+    overflow: hidden;
+    background: #111;
+  }
+
+  /* Ornements coins */
+  .trombi-frame-outer::before,
+  .trombi-frame-outer::after,
+  .trombi-corner-b::before,
+  .trombi-corner-b::after {
+    content: '◆';
+    position: absolute;
+    color: #c9a96e;
+    font-size: 0.85rem;
+    line-height: 1;
+    z-index: 5;
+  }
+  .trombi-frame-outer::before { top: -5px;  left: -5px; }
+  .trombi-frame-outer::after  { top: -5px;  right: -5px; }
+  .trombi-corner-b::before    { bottom: -5px; left: -5px; }
+  .trombi-corner-b::after     { bottom: -5px; right: -5px; }
+
+  .trombi-slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  .trombi-slide.active { opacity: 1; }
+  .trombi-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Vignette overlay */
+  .trombi-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.25);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .trombi-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.2rem;
+    margin-top: 2rem;
+  }
+
+  .trombi-btn {
+    background: white;
+    border: 1.5px solid rgba(201,169,110,0.5);
+    color: #c9a96e;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+    flex-shrink: 0;
+  }
+  .trombi-btn:hover { background: #c9a96e; color: white; transform: scale(1.08); }
+
+  .trombi-dots {
+    display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap;
+    justify-content: center; max-width: 200px;
+  }
+  .trombi-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #c9a96e;
+    opacity: 0.28;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: opacity 0.3s, transform 0.2s;
+  }
+  .trombi-dot.active { opacity: 1; transform: scale(1.35); }
+  .trombi-dot:hover  { opacity: 0.65; }
+
+  .trombi-counter {
+    font-family: 'Jost', sans-serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    color: #c9a96e;
+    opacity: 0.55;
+    text-align: center;
+    margin-top: 0.55rem;
+  }
+
+  @media (max-width: 480px) {
+    .trombi-frame-outer { width: calc(100vw - 3.5rem); }
+  }
+
   footer {
     text-align: center;
     padding: 2.5rem 1rem 2rem;
@@ -1290,6 +1416,27 @@
   </div>
 
   <div class="letter-signature" id="letterSignature">Nicolas ❤️</div>
+</section>
+
+<!-- ─── TROMBINOSCOPE ─── -->
+<section class="trombi-section">
+  <div class="section-label fade-in">
+    <span>Nos souvenirs</span>
+  </div>
+
+  <div class="trombi-frame-outer fade-in">
+    <div class="trombi-frame" id="trombiFrame">
+      <!-- slides injectées par JS -->
+    </div>
+    <div class="trombi-corner-b"></div>
+  </div>
+
+  <div class="trombi-nav">
+    <button class="trombi-btn" id="trombiPrev" aria-label="Précédent">&#8592;</button>
+    <div class="trombi-dots" id="trombiDots"></div>
+    <button class="trombi-btn" id="trombiNext" aria-label="Suivant">&#8594;</button>
+  </div>
+  <p class="trombi-counter" id="trombiCounter"></p>
 </section>
 
 <!-- ─── MESSAGES ─── -->
@@ -1810,6 +1957,99 @@
     .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
     .then(function(data) { initMessages(data); })
     .catch(function() { initMessages(FALLBACK_MESSAGES); });
+</script>
+
+<script>
+// ── Trombinoscope ────────────────────────────────────────────────────────────
+(function() {
+  var PHOTOS = [
+    'img/web/-YcVAw6N.webp',
+    'img/web/60b620d8-2f72-4482-bad7-08a01ef8ba69.webp',
+    'img/web/20251210_135917.webp',
+    'img/web/20260214_150007.webp',
+    'img/web/20260214_150720.webp',
+    'img/web/AS-8Pgab.webp',
+    'img/web/BJdG1A0c.webp',
+    'img/web/Copilot_20260414_001250.webp',
+    'img/web/IMG_9354.webp',
+    'img/web/JCT0Lh0i.webp',
+    'img/web/kgEZnoKz.webp',
+    'img/web/L-3lxfB4.webp',
+    'img/web/Messenger_creation_80895293-075E-4100-AF3C-0A4B51D27234.webp',
+    'img/web/OtSFQswY.webp',
+    'img/web/received_1826447157997631.webp',
+    'img/web/rS5Ju_0v.webp',
+    'img/web/T-rutdzs.webp',
+    'img/web/ubyJhP9q.webp',
+    'img/web/urOHdpLl.webp',
+    'img/web/VfXlw-oP.webp',
+    'img/web/WCzBjflM.webp',
+    'img/web/xkYb1yut.webp',
+    'img/web/ZwmqmG0S.webp',
+    'img/web/zzy5BZnb.webp'
+  ];
+
+  var frame     = document.getElementById('trombiFrame');
+  var dotsEl    = document.getElementById('trombiDots');
+  var counterEl = document.getElementById('trombiCounter');
+  var current   = 0;
+  var timer     = null;
+
+  // Build slides
+  PHOTOS.forEach(function(src, i) {
+    var slide = document.createElement('div');
+    slide.className = 'trombi-slide' + (i === 0 ? ' active' : '');
+    var img = document.createElement('img');
+    img.src = src;
+    img.alt = 'Souvenir ' + (i + 1);
+    img.loading = i < 3 ? 'eager' : 'lazy';
+    slide.appendChild(img);
+    frame.appendChild(slide);
+
+    var dot = document.createElement('button');
+    dot.className = 'trombi-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Photo ' + (i + 1));
+    dot.addEventListener('click', function() { goTo(i); });
+    dotsEl.appendChild(dot);
+  });
+
+  function getSlides() { return frame.querySelectorAll('.trombi-slide'); }
+  function getDots()   { return dotsEl.querySelectorAll('.trombi-dot'); }
+
+  function goTo(index) {
+    var slides = getSlides();
+    var dots   = getDots();
+    var n = slides.length;
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = ((index % n) + n) % n;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+    counterEl.textContent = (current + 1) + ' / ' + n;
+    resetTimer();
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(function() { goTo(current + 1); }, 4500);
+  }
+
+  document.getElementById('trombiPrev').addEventListener('click', function() { goTo(current - 1); });
+  document.getElementById('trombiNext').addEventListener('click', function() { goTo(current + 1); });
+
+  // Swipe support
+  var touchX = null;
+  frame.addEventListener('touchstart', function(e) { touchX = e.touches[0].clientX; }, { passive: true });
+  frame.addEventListener('touchend', function(e) {
+    if (touchX === null) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
+    touchX = null;
+  });
+
+  counterEl.textContent = '1 / ' + PHOTOS.length;
+  resetTimer();
+})();
 </script>
 </body>
 </html>
