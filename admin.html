@@ -421,6 +421,54 @@ body {
 .toast.show { opacity: 1; transform: translateY(0); }
 .toast.ok    { background: var(--ok); }
 .toast.fail  { background: var(--err); }
+
+/* ── Photo grid ── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+.photo-thumb {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--light);
+  cursor: grab;
+}
+.photo-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-thumb-del {
+  position: absolute;
+  top: 4px; right: 4px;
+  background: rgba(58,42,42,0.7);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px; height: 24px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.photo-thumb:hover .photo-thumb-del { opacity: 1; }
+.photo-thumb.uploading { opacity: 0.5; }
+.photo-thumb.uploading::after {
+  content: '⏳';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: rgba(255,255,255,0.4);
+}
 </style>
 </head>
 <body>
@@ -486,6 +534,26 @@ body {
     <div class="msg-list" id="msgList"></div>
     <div class="empty-state" id="emptyState" style="display:none">
       Aucun message. Clique sur <strong>+ Ajouter</strong> pour commencer.
+    </div>
+
+    <!-- Photos section -->
+    <div class="section-head" style="margin-top:2.5rem">
+      <h2>Photos du trombinoscope</h2>
+      <button class="btn btn-primary" onclick="document.getElementById('photoUploadInput').click()">+ Ajouter</button>
+      <input type="file" id="photoUploadInput" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)">
+    </div>
+    <p style="font-size:0.75rem;color:var(--mid);opacity:0.6;margin-bottom:1rem">
+      Les photos sont uploadées dans <code>img/web/</code> et sauvegardées dans <code>photos.json</code>.
+    </p>
+
+    <div class="photo-grid" id="photoGrid"></div>
+    <div class="empty-state" id="photoEmptyState" style="display:none">
+      Aucune photo. Clique sur <strong>+ Ajouter</strong> pour commencer.
+    </div>
+
+    <div style="margin-top:1rem;display:flex;gap:.6rem;">
+      <button class="btn btn-ghost btn-sm" onclick="loadPhotosFromGitHub()">↓ Charger les photos</button>
+      <button class="btn btn-gold" id="publishPhotosBtn" onclick="publishPhotos()" disabled>✦ Publier photos</button>
     </div>
   </div>
 </div>
@@ -971,6 +1039,134 @@ function toast(msg, type) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Photos ───────────────────────────────────────────────────────────────────
+var photos = [];
+var photosSha = '';
+
+function photosApiUrl() {
+  var c = getConfig();
+  return 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/photos.json';
+}
+
+function fileApiUrl(filename) {
+  var c = getConfig();
+  return 'https://api.github.com/repos/' + c.owner + '/' + c.repo + '/contents/img/web/' + encodeURIComponent(filename);
+}
+
+function loadPhotosFromGitHub() {
+  var c = getConfig();
+  if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
+  setStatus('loading', 'Chargement des photos…');
+  fetch(photosApiUrl(), { headers: apiHeaders() })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      photosSha = data.sha;
+      photos = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+      setStatus('success', photos.length + ' photo(s) chargée(s)');
+      document.getElementById('publishPhotosBtn').disabled = false;
+      renderPhotos();
+    })
+    .catch(function(err) { setStatus('error', 'Erreur: ' + err.message); });
+}
+
+function renderPhotos() {
+  var grid  = document.getElementById('photoGrid');
+  var empty = document.getElementById('photoEmptyState');
+  grid.innerHTML = '';
+  empty.style.display = photos.length === 0 ? 'block' : 'none';
+  photos.forEach(function(src, i) {
+    var thumb = document.createElement('div');
+    thumb.className = 'photo-thumb';
+    thumb.innerHTML =
+      '<img src="' + escHtml(src) + '" alt="" loading="lazy">' +
+      '<button class="photo-thumb-del" onclick="deletePhoto(' + i + ')" title="Supprimer">✕</button>';
+    grid.appendChild(thumb);
+  });
+}
+
+function deletePhoto(i) {
+  if (!confirm('Retirer cette photo du slideshow ?')) return;
+  photos.splice(i, 1);
+  renderPhotos();
+  document.getElementById('publishPhotosBtn').disabled = false;
+  toast('Photo retirée (clique Publier pour sauvegarder)', 'ok');
+}
+
+function handlePhotoUpload(input) {
+  var files = Array.from(input.files);
+  if (!files.length) return;
+  var c = getConfig();
+  if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
+
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl  = e.target.result;
+      var base64   = dataUrl.split(',')[1];
+      var ext      = file.name.split('.').pop().toLowerCase();
+      var filename = Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.' + ext;
+
+      // Preview card with loading state
+      var thumb = document.createElement('div');
+      thumb.className = 'photo-thumb uploading';
+      thumb.innerHTML = '<img src="' + dataUrl + '" alt="">';
+      document.getElementById('photoGrid').prepend(thumb);
+      document.getElementById('photoEmptyState').style.display = 'none';
+
+      // Push to GitHub
+      fetch(fileApiUrl(filename), {
+        method: 'PUT',
+        headers: apiHeaders(),
+        body: JSON.stringify({
+          message: 'Add photo ' + filename + ' via admin',
+          content: base64
+        })
+      })
+        .then(function(r) { if (!r.ok) return r.json().then(function(d) { throw new Error(d.message); }); return r.json(); })
+        .then(function() {
+          thumb.classList.remove('uploading');
+          var path = 'img/web/' + filename;
+          photos.unshift(path);
+          thumb.innerHTML =
+            '<img src="' + escHtml(path) + '" alt="" loading="lazy">' +
+            '<button class="photo-thumb-del" onclick="deletePhoto(0)" title="Supprimer">✕</button>';
+          renderPhotos();
+          document.getElementById('publishPhotosBtn').disabled = false;
+          toast('Photo uploadée ! Publie photos.json pour l\'afficher.', 'ok');
+        })
+        .catch(function(err) {
+          thumb.remove();
+          toast('Erreur upload: ' + err.message, 'fail');
+        });
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function publishPhotos() {
+  var c = getConfig();
+  if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
+  setStatus('loading', 'Publication de photos.json…');
+  document.getElementById('publishPhotosBtn').disabled = true;
+  var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(photos, null, 2))));
+  var body = { message: 'Update photos.json via admin', content: encoded };
+  if (photosSha) body.sha = photosSha;
+  fetch(photosApiUrl(), { method: 'PUT', headers: apiHeaders(), body: JSON.stringify(body) })
+    .then(function(r) { if (!r.ok) return r.json().then(function(d) { throw new Error(d.message); }); return r.json(); })
+    .then(function(data) {
+      photosSha = data.content.sha;
+      setStatus('success', 'Photos publiées ✓');
+      document.getElementById('publishPhotosBtn').disabled = false;
+      toast('photos.json publié ! Le site sera mis à jour dans ~30s', 'ok');
+    })
+    .catch(function(err) {
+      setStatus('error', 'Erreur: ' + err.message);
+      document.getElementById('publishPhotosBtn').disabled = false;
+      toast('Erreur: ' + err.message, 'fail');
+    });
 }
 </script>
 </body>
