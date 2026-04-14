@@ -1142,7 +1142,6 @@ function handlePhotoUpload(input) {
             content: base64
           };
           if (existing && existing.sha) body.sha = existing.sha;
-
           return fetch(fileApiUrl(filename), {
             method: 'PUT',
             headers: apiHeaders(),
@@ -1154,13 +1153,27 @@ function handlePhotoUpload(input) {
           return r.json();
         })
         .then(function() {
+          // Garder la preview locale (dataUrl) — GitHub Pages pas encore déployé
           thumb.classList.remove('uploading');
+          var delIdx = photos.length; // index après unshift
           photos.unshift(path);
-          renderPhotos();
-          document.getElementById('publishPhotosBtn').disabled = false;
-          setStatus('success', 'Photo uploadée : ' + filename);
+          // Juste ajouter le bouton supprimer sans remplacer l'image
+          var delBtn = document.createElement('button');
+          delBtn.className = 'photo-thumb-del';
+          delBtn.title = 'Supprimer';
+          delBtn.textContent = '✕';
+          delBtn.onclick = function() { deletePhoto(0); };
+          thumb.appendChild(delBtn);
+
+          setStatus('loading', 'Photo ' + idx + '/' + files.length + ' uploadée — publication…');
           toast('Photo ' + idx + '/' + files.length + ' uploadée ✓', 'ok');
-          uploadNext(); // fichier suivant
+
+          // Si c'est la dernière, publier photos.json automatiquement
+          if (!queue.length) {
+            autoPublishPhotos();
+          } else {
+            uploadNext();
+          }
         })
         .catch(function(err) {
           thumb.remove();
@@ -1168,7 +1181,7 @@ function handlePhotoUpload(input) {
           setStatus('error', 'Erreur upload: ' + msg);
           toast('Erreur: ' + msg.slice(0, 60), 'fail');
           console.error('Upload error full:', msg);
-          uploadNext(); // continuer malgré l'erreur
+          uploadNext();
         });
     };
     reader.readAsDataURL(file);
@@ -1178,21 +1191,58 @@ function handlePhotoUpload(input) {
   input.value = '';
 }
 
+// Publication automatique après upload — récupère le SHA frais avant d'écrire
+function autoPublishPhotos() {
+  var c = getConfig();
+  setStatus('loading', 'Mise à jour de photos.json…');
+  // Récupérer le SHA actuel de photos.json avant d'écrire
+  fetch(photosApiUrl(), { headers: apiHeaders() })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(existing) {
+      if (existing && existing.sha) photosSha = existing.sha;
+      return doPublishPhotos();
+    })
+    .then(function() {
+      setStatus('success', 'Photos publiées ✓ — site mis à jour dans ~30s');
+      toast('photos.json publié automatiquement ✓', 'ok');
+    })
+    .catch(function(err) {
+      setStatus('error', 'Erreur publication: ' + err.message);
+      toast('Erreur publication: ' + err.message.slice(0, 60), 'fail');
+    });
+}
+
+function doPublishPhotos() {
+  var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(photos, null, 2))));
+  var body = { message: 'Update photos.json via admin', content: encoded };
+  if (photosSha) body.sha = photosSha;
+  return fetch(photosApiUrl(), { method: 'PUT', headers: apiHeaders(), body: JSON.stringify(body) })
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(d) { throw new Error(d.message || 'HTTP ' + r.status); });
+      return r.json();
+    })
+    .then(function(data) { photosSha = data.content.sha; });
+}
+
 function publishPhotos() {
   var c = getConfig();
   if (!c.owner || !c.repo || !c.token) { toast('Configure GitHub d\'abord', 'fail'); return; }
   setStatus('loading', 'Publication de photos.json…');
   document.getElementById('publishPhotosBtn').disabled = true;
-  var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(photos, null, 2))));
-  var body = { message: 'Update photos.json via admin', content: encoded };
-  if (photosSha) body.sha = photosSha;
-  fetch(photosApiUrl(), { method: 'PUT', headers: apiHeaders(), body: JSON.stringify(body) })
-    .then(function(r) { if (!r.ok) return r.json().then(function(d) { throw new Error(d.message); }); return r.json(); })
-    .then(function(data) {
-      photosSha = data.content.sha;
+  // Récupérer le SHA frais
+  fetch(photosApiUrl(), { headers: apiHeaders() })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(existing) {
+      if (existing && existing.sha) photosSha = existing.sha;
+    })
+    .catch(function() {})
+    .then(function() {
+      return doPublishPhotos();
+    })
+    .then(function() {
       setStatus('success', 'Photos publiées ✓');
       document.getElementById('publishPhotosBtn').disabled = false;
-      toast('photos.json publié ! Le site sera mis à jour dans ~30s', 'ok');
+      toast('photos.json publié ! Site mis à jour dans ~30s', 'ok');
     })
     .catch(function(err) {
       setStatus('error', 'Erreur: ' + err.message);
@@ -1200,6 +1250,7 @@ function publishPhotos() {
       toast('Erreur: ' + err.message, 'fail');
     });
 }
+
 </script>
 </body>
 </html>
